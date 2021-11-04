@@ -1,0 +1,128 @@
+import cv2
+import numpy as np
+import pandas as pd
+import matplotlib
+import time
+import os
+import datetime
+
+class HydroEye:
+
+    dates1 = {
+            "Date": [],
+            "Original Photo": [],
+            "Picture": [],
+            "Green Pixels": [],
+            "Percentage": [],
+            }
+    dates2, dates3 = dates1, dates1
+    
+    pic_t, t = 0, 0
+
+    def SavePic(self, frame):
+        global pic_t, dates1, dates2, dates3
+        img_name1 = "plant{}.png".format(pic_t)
+        img_name = "Pictures\Total\plant{}.png".format(pic_t)
+        IsWritten = cv2.imwrite(img_name, frame)
+
+        if (IsWritten):
+            pic_t += 1
+            now_date = str(datetime.datetime.now().strftime("%d.%m.%y %H:%M:%S"))
+            dates1["Date"] += [now_date]
+            dates1["Original Photo"] += [img_name]
+            dates2["Date"] += [now_date]
+            dates2["Original Photo"] += [img_name]
+            dates3["Date"] += [nod_date]
+            dates3["Original Photo"] += [img_name]
+            return True, img_name, img_name1
+
+
+    def Render(self, pic_path, dict_path):
+        global t, dates1, dates2, dates3
+        image = cv2.imread(pic_path)
+        # print(image.shape) # Width, Height, numOfColorChannels
+        # TODO: add possible frames
+        # frame = image
+        for i in range(3):
+            if (i == 0): 
+                frame = image[0:0, 0:0]
+                name = "Pictures\p1\p{}.png".format(t)
+                dates1["Picture"] += [name]
+            elif (i == 1): 
+                frame = image[0:0, 0:0]
+                name = "Pictures\p2\p{}.png".format(t)
+                dates2["Picture"] += [name]
+            elif (i == 2): 
+                frame = image[0:0, 0:0]
+                name = "Pictures\p3\p{}.png".format(t)
+                dates3["Picture"] += [name]
+            t += 1
+
+            frameBGR = cv2.GaussianBlur(frame, (7, 7), 0) # blurr
+            """kernel = np.ones((15, 15), np.float32)/255
+            frameBGR = cv2.filter2D(frameBGR, -1, kernel)"""
+            hsv = cv2.cvtColor(frameBGR, cv2.COLOR_BGR2HSV) # convert to hsv
+
+            colorLow = np.array([35, 46, 63])
+            colorHigh = np.array([80, 255, 255])
+            mask = cv2.inRange(hsv, colorLow, colorHigh) # hsv values to define mask
+
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+            mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel) # morphological transformation mask
+            result = cv2.bitwise_and(frame, frame, mask = mask)
+            IsWritten = cv2.imwrite(name, result)
+
+            if (IsWritten):
+                total_pix = result.size
+                green_pix = np.count_nonzero(result)
+                percentage = round(green_pix * 100 / total_pix, 2)
+                # print(total_pix, green_pix, percentage)
+                # dates[] += [green_pix, percentage]
+                if (i == 0):
+                    dates1["Green Pixels"] += [green_pix]
+                    dates1["Percantage"] += [percentage]
+                elif (i == 1):
+                    dates2["Green Pixels"] += [green_pix]
+                    dates2["Percantage"] += [percentage]
+                elif (i == 2):
+                    dates3["Green Pixels"] += [green_pix]
+                    dates3["Percantage"] += [percentage]
+
+        HydroEye.Statistics()
+
+
+    def Statistics(self):
+        global dates1, dates2, dates3
+        df1 = pd.DataFrame(dates1)
+        df2 = pd.DataFrame(dates2)
+        df3 = pd.DataFrame(dates3)
+
+        sheets = {"Plant 1": df1, "Plant 2": df2, "Plant 3": df3}
+        writer = pd.ExcelWriter('Statistics/Plants.xlsx', engine='xlsxwriter')
+
+        for sheet_name in sheets.keys():
+            sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
+        
+        writer.save()
+
+
+    def __init__(self):
+        while (True):
+            endt = datetime.datetime.now() + datetime.timedelta(seconds=5) # minutes=30 as default
+
+            cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+            if not cap.isOpened():
+                raise IOError("Can not open webcam")
+
+            while (datetime.datetime.now() <= endt):
+                ret, frame = cap.read()
+                # cv2.imshow('Output', frame) # Local video showing
+
+            IsSaved, pic_path, dict_path = HydroEye.SavePic(frame)
+
+            if (IsSaved):
+                HydroEye.Render(pic_path, dict_path)
+
+            cap.release()
+            cv2.destroyAllWindows()
