@@ -5,6 +5,7 @@ import matplotlib
 import time
 import os
 import datetime
+import Statistic
 
 class HydroEye:
 
@@ -14,6 +15,8 @@ class HydroEye:
             "Picture": [],
             "Green Pixels": [],
             "Percentage": [],
+            "Temperature": [],
+            "Humidity": []
             }
     dates2, dates3 = dates1, dates1
     
@@ -88,23 +91,9 @@ class HydroEye:
                 elif (i == 2):
                     dates3["Green Pixels"] += [green_pix]
                     dates3["Percantage"] += [percentage]
-
-        HydroEye.Statistics()
-
-
-    def Statistics(self):
-        global dates1, dates2, dates3
-        df1 = pd.DataFrame(dates1)
-        df2 = pd.DataFrame(dates2)
-        df3 = pd.DataFrame(dates3)
-
-        sheets = {"Plant 1": df1, "Plant 2": df2, "Plant 3": df3}
-        writer = pd.ExcelWriter('Statistics/Plants.xlsx', engine='xlsxwriter')
-
-        for sheet_name in sheets.keys():
-            sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
+        stat = Statistics()
+        stat.Create(dates1, dates2, dates3)
         
-        writer.save()
 
 
     def __init__(self):
