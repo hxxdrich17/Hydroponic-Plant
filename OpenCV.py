@@ -35,7 +35,6 @@ class HydroEye:
             dates3["Original Photo"] += [img_name]
             return True, img_name, img_name1
 
-
     def Render(self, pic_path, dict_path):
         global t, dates1, dates2, dates3
         image = cv2.imread(pic_path)
