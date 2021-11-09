@@ -1,43 +1,52 @@
 from Relay import Setup
 from Relay import Check
+import datetime
 import time
+import configparser
 
-f = open("Settings\Config.txt", "r", encoding="UTF-8")
-sec = int(f.readlines()[3].split("Seconds for filling = ")[1].split("\n")[0])
-f.close()
-RELAY = Setup.Relay(12, False)
+config = configparser.RawConfigParser()
+config.read("D:\OneDrive\hxxdrich17-PC\Coding\Hydro Project\Settings\Config.conf")  # TODO: Linux path
+sec = config.getint("cfg", "Seconds_for_filling")
+
+ck = Check.Checks()
+
+RELAY = Setup.Relay(12, False)  # TODO: Single pump, not all (done)
+RELAY1 = Setup.Relay(13, False)  # TODO: Initialize pin of cooler
 
 class Relay:
 
-    def Logs(self):
+    def Logs(self, id, num):
+        date = str(datetime.datetime.now().strftime("%d.%m.%y %H:%M:%S"))
         f = open("Logs\Logs.txt", "a", encoding="UTF-8")
-        # TODO: Logs
+        if (id == 1):
+            f.write(f"[{date}] Заливка воды {sec} секунд. Причина: {num}% влажности.")
+        if (id == 2):
+            f.write(f"[{date}] Включение кулера для охлаждения. Причина: температура {num}°C.")
         f.close()
 
-    def WaterPlant(self, relay):
-        # TODO: id of relay
+    def WaterPlant(self, relay, num):
+        # TODO: id of relay (done)
         relay.on()
-        # while (ck.Normalized("humid", num) == False):
-        #     pass
         time.sleep(sec)
         relay.off()
+        Relay.Logs(1, num)
 
-    def Cooler(self):
-        # TODO: Cooler
-        pass
+    def Cooler(self, relay, num):
+        relay.on()
+        while (ck.Normalized("max_temp", num) == False):
+            pass
+        relay.off()
+        Relay.Logs(2, num)
 
     def Main(self):
-        # time_keeper = TK.TimeKeeper(TK.TimeKeeper.get_current_time())
-        # if (time_keeper.current_time == WATERING_TIME):
-        #     WaterPlant(RELAY, SECONDS_TO_WATER)
-        #     time_keeper.set_time_last_watered(TK.TimeKeeper.get_current_time())
-        #     print("\nPlant was last watered at {}".format(time_keeper.time_last_watered))
-        ck = Check()
         check, num = ck.Check_DHT()
         if (check == "humid"):
-            Relay.WaterPlant(RELAY)
-        # TODO: Temperature and level of water
+            Relay.WaterPlant(1, RELAY, num)
+        if (check == "max_temp"):
+            Relay.Cooler(1, RELAY1, num)
+        # TODO: Temperature and level of water (done)
 
-    while True:
-        time.sleep(1)
-        main()
+    def __init__(self):
+        while True:
+            time.sleep(1)
+            Relay.Main(1)

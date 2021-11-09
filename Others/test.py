@@ -68,7 +68,7 @@
 # # #     k = cv2.waitKey(5) & 0xFF
 # # #     if k == 27:
 # # #         break
-    
+
 # # # cv2.destroyAllWindows()
 # # # import cv2
 # # # import numpy as np
@@ -216,19 +216,49 @@
 # # dates2, dates3 = dates1, dates1
 # # print(dates1, dates2, dates3)
 
-t = 1
+# t = 1
+#
+# class Test:
+#
+#         def lol(self):
+#             print(type(sec), t)
+#
+#         def __init__(self):
+#             global sec
+#             f = open("Settings\Config.txt", "r", encoding="UTF-8")
+#             sec = int(f.readlines()[3].split("Seconds for filling = ")[1].split("\n")[0])
+#             f.close()
+#
+#
+# a = Test()
+# a.lol()
+
+from threading import Thread
+# from Others import Test1 as t
+# from Others import Test2 as t1
+#
+#
+# def main():
+#     while True:
+#         t.test()
+#         t1.test1()
+
+
+# th_1, th_2 = Thread(target=t.test), Thread(target=t1.test1)
+#
+# if __name__ == '__main__':
+#     th_1.start(), th_2.start()
+#     th_1.join(), th_2.join()
+
+# main()
 
 class Test:
 
-        def lol(self):
-            print(type(sec), t)
+    def log(self):
+        print(123)
 
-        def __init__(self):
-            global sec
-            f = open("Settings\Config.txt", "r", encoding="UTF-8")
-            sec = int(f.readlines()[3].split("Seconds for filling = ")[1].split("\n")[0])
-            f.close()
+    def __init__(self):
+        print("Hey")
 
 
-a = Test()
-a.lol()
+Test.log(1)

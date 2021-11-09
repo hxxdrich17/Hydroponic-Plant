@@ -1,10 +1,10 @@
-import datetime
+import pandas as pd
 from Relay import Check
 
 class Statistics:
 
-    def Create(self, dates1, dates2, dates3):
-        ck = Check()
+    def create(self, dates1, dates2, dates3):
+        ck = Check.Checks()
         temp, humid = ck.Check_DHT(stat=True)
         dates1["Temperature"] += [temp]
         dates2["Temperature"] += [temp]

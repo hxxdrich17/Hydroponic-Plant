@@ -1,9 +1,5 @@
 import cv2
 import numpy as np
-import pandas as pd
-import matplotlib
-import time
-import os
 import datetime
 import Statistic
 
@@ -13,10 +9,10 @@ class HydroEye:
             "Date": [],
             "Original Photo": [],
             "Picture": [],
-            "Green Pixels": [],
-            "Percentage": [],
             "Temperature": [],
-            "Humidity": []
+            "Humidity": [],
+            "Green Pixels": [],
+            "Percentage": []
             }
     dates2, dates3 = dates1, dates1
     
@@ -35,7 +31,7 @@ class HydroEye:
             dates1["Original Photo"] += [img_name]
             dates2["Date"] += [now_date]
             dates2["Original Photo"] += [img_name]
-            dates3["Date"] += [nod_date]
+            dates3["Date"] += [now_date]
             dates3["Original Photo"] += [img_name]
             return True, img_name, img_name1
 
@@ -66,8 +62,8 @@ class HydroEye:
             frameBGR = cv2.filter2D(frameBGR, -1, kernel)"""
             hsv = cv2.cvtColor(frameBGR, cv2.COLOR_BGR2HSV) # convert to hsv
 
-            colorLow = np.array([35, 46, 63])
-            colorHigh = np.array([80, 255, 255])
+            colorLow = np.array([49, 75, 0]) # TODO: correct low & high values (done)
+            colorHigh = np.array([82, 255, 255])
             mask = cv2.inRange(hsv, colorLow, colorHigh) # hsv values to define mask
 
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
@@ -80,8 +76,6 @@ class HydroEye:
                 total_pix = result.size
                 green_pix = np.count_nonzero(result)
                 percentage = round(green_pix * 100 / total_pix, 2)
-                # print(total_pix, green_pix, percentage)
-                # dates[] += [green_pix, percentage]
                 if (i == 0):
                     dates1["Green Pixels"] += [green_pix]
                     dates1["Percantage"] += [percentage]
@@ -91,10 +85,15 @@ class HydroEye:
                 elif (i == 2):
                     dates3["Green Pixels"] += [green_pix]
                     dates3["Percantage"] += [percentage]
-        stat = Statistics()
-        stat.Create(dates1, dates2, dates3)
-        
+                HydroEye.Logs(1)
+        stat = Statistic.Statistics()
+        stat.create(dates1, dates2, dates3)
 
+    def Logs(self):
+        f = open("Logs/Logs.txt", "a", encoding="UTF-8")
+        date = str(datetime.datetime.now().strftime("%d.%m.%y %H:%M:%S"))
+        f.write(f"[{date}] Захват и анализ изображения.")
+        f.close()
 
     def __init__(self):
         while (True):
@@ -108,10 +107,10 @@ class HydroEye:
                 ret, frame = cap.read()
                 # cv2.imshow('Output', frame) # Local video showing
 
-            IsSaved, pic_path, dict_path = HydroEye.SavePic(frame)
+            IsSaved, pic_path, dict_path = HydroEye.SavePic(1, frame)
 
             if (IsSaved):
-                HydroEye.Render(pic_path, dict_path)
+                HydroEye.Render(1, pic_path, dict_path)
 
             cap.release()
             cv2.destroyAllWindows()
